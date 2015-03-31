@@ -19,7 +19,7 @@ layer_t *layer_new() {
 
 void layer_resize(layer_t *l, uint32_t w, uint32_t h) {
   if(l->bitmap.data) rgba_free(&l->bitmap);
-  l->bitmap = rgba_alloc(w, h, NULL);
+  l->bitmap = rgba_new(w, h, NULL);
   l->need_compose = true;
 }
 
@@ -29,7 +29,7 @@ void layer_init_size(layer_t *l, uint32_t w, uint32_t h) {
 }
 
 void layer_fill(layer_t *l, uint32_t color) {
-  uint32_t *dptr = l->bitmap.data;
+  uint32_t *dptr = (uint32_t*)l->bitmap.data;
   unsigned n;
   for(n = 0; n < l->bitmap.w * l->bitmap.h; n++) *dptr++ = color;
   l->need_compose = true;
@@ -82,11 +82,11 @@ layer_t* remove_child(layer_t* l) {
   return remove_child_at(l->parent, n);
 }
 
-void layer_delete(layer_t *l) {
+void layer_free(layer_t *l) {
   // Remove child if not orphan
   if(l->parent) remove_child(l);
   // Call custom delete function
-  if(l->delete) l->delete(l);
+  if(l->free) l->free(l);
   // Free up memory
   rgba_free(&l->bitmap);
   rgba_free(&l->composite);

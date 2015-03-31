@@ -15,7 +15,7 @@ struct layer_t {
   list_t           children;                    // list of children
   struct layer_t  *parent;                      // parent
   void           (*render)(struct layer_t *me); // render function
-  void           (*delete)(struct layer_t *me); // delete function
+  void           (*free)(struct layer_t *me);   // delete function
 };
 
 typedef struct layer_t layer_t;
@@ -25,7 +25,7 @@ void layer_init(layer_t *l);
 void layer_init_size(layer_t *l, uint32_t w, uint32_t h);
 void layer_move(layer_t* l, int32_t x, int32_t y, bool relative);
 void layer_fill(layer_t *l, uint32_t color);
-void layer_delete(layer_t* g);
+void layer_free(layer_t* g);
 
 // Removes a child by z index from the specified parent
 // Child will not be deleted and may be re-used

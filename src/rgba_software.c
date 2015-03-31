@@ -3,10 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "rgba.h"
-
-typedef struct __attribute__ ((__packed__)) {
-  uint8_t r, g, b, a;
-} pixel_t;
+#include "rect.h"
+#include "utils.h"
 
 // Single pixel RGBA overlay core operation
 // TODO: not mathematically accurate nor very efficient
@@ -18,43 +16,64 @@ static inline void rgba_pixel(pixel_t *dptr, pixel_t *sptr) {
 }
 
 // Software fallback RGBA drawing
-void rgba_draw(void *dst, uint32_t dst_stride, void *src, uint32_t x, uint32_t y, uint32_t src_w, uint32_t src_h, uint32_t src_stride) {
-  // Sanity: nothing to do?
-  if(src_w == 0 || src_h == 0) return;
-  // Set up source pointer for right=>left, bottom=>up
-  pixel_t  *dptr, *sptr;
-  // Keep a copy of source width
-  uint32_t org_w = src_w;
-  
-  while(src_h--) {
-    // Set up destination pointer for right=>left
-    dptr = &((pixel_t*)dst)[(y + src_h) * dst_stride + (src_w + x)];
-    sptr = &((pixel_t*)src)[src_h * src_stride + src_w];
-    // Loop over each line and compose pixels as we go
-    while(src_w--) rgba_pixel(--dptr, --sptr); src_w = org_w;
+void rgba_alpha_low(void *dst, size_t dst_stride, void *src, size_t src_stride, uint32_t w, uint32_t h) {
+  if(w) {
+    while(h--) {
+      pixel_t *pdst = &((pixel_t*)dst)[h * dst_stride + w];
+      pixel_t *psrc = &((pixel_t*)src)[h * src_stride + w];
+      for(uint32_t n = w; n--; ) rgba_pixel(--pdst, --psrc);
+    }
   }
 }
 
 // Software fallback RGBA drawing
-void rgba_copy(void *dst, uint32_t dst_stride, void *src, uint32_t x, uint32_t y, uint32_t src_w, uint32_t src_h, uint32_t src_stride) {
-  // Sanity: nothing to do?
-  if(src_w == 0 || src_h == 0) return;
-  // Set up source pointer for right=>left, bottom=>up
-  pixel_t  *dptr, *sptr;
-  
-  while(src_h--) {
-    // Set up destination pointer for right=>left
-    dptr = &((pixel_t*)dst)[(y + src_h) * dst_stride + x];
-    sptr = &((pixel_t*)src)[src_h * src_stride];
-    // Copy line
-    memcpy(dptr, sptr, src_w * 4);
+void rgba_copy_low(void *dst, size_t dst_stride, void *src, size_t src_stride, uint32_t w, uint32_t h) {
+  if(w) {
+    while(h--) {
+      pixel_t *pdst = &((pixel_t*)dst)[h * dst_stride];
+      pixel_t *psrc = &((pixel_t*)src)[h * src_stride];
+      memcpy(pdst, psrc, w * sizeof(pixel_t));
+    }
   }
 }
 
+// If rdst/rsrc is NULL, all of dst/src will be used.
+// If .w and/or .h will be copied from rsrc if they are zero in rdst.
+void rgba_blit(rgba_t* dst, rect_t *rdst, rgba_t* src, rect_t *rsrc, blit_e mode) {
+  // Sanity: impossible xy
+  if(rsrc->x >= src->w) return;
+  if(rsrc->y >= src->h) return;
+  if(rdst->x >= dst->w) return;
+  if(rdst->y >= dst->h) return;
+  // Condition src rectangle
+  rect_t sr = rsrc ? (rect_t){
+    rsrc->x, rsrc->y,
+    min(rsrc->x + rsrc->w, src->w) - rsrc->x,
+    min(rsrc->y + rsrc->h, src->h) - rsrc->y,
+  } : (rect_t){0, 0, src->w, src->h};
+  // Condition dst rectangle
+  rect_t dr = rdst ? (rect_t){
+    rdst->x, rdst->y,
+    min(rdst->x + rdst->w, dst->w) - rdst->x,
+    min(rdst->y + rdst->h, dst->h) - rdst->y,
+  } : (rect_t){0, 0, dst->w, dst->h};
+  // Condition size
+  if(dr.w == 0) dr.w = sr.w;
+  if(dr.h == 0) dr.h = sr.h;
+  uint32_t w = min(sr.w, dr.w);
+  uint32_t h = min(sr.h, dr.h);
+  // Draw
+  if(mode == BLIT_ALPHA)
+    rgba_alpha_low(&dst->data[dr.y * dst->s + dr.x], dst->s, &src[sr.y * src->s + sr.x], src->s, w, h);
+  else if(mode == BLIT_COPY)
+    rgba_copy_low(&dst->data[dr.y * dst->s + dr.x], dst->s, &src[sr.y * src->s + sr.x], src->s, w, h);
+}
+
 // Allocate RGBA surface
-rgba_t rgba_alloc(uint32_t w, uint32_t h, const void *data) {
+rgba_t rgba_new(uint32_t w, uint32_t h, const void *data) {
   rgba_t rgba;
   rgba.data = malloc(w * h * 4);
+  rgba.s = w;
   rgba.w = w;
   rgba.h = h;
   if(data) memcpy(rgba.data, data, w * h * 4);

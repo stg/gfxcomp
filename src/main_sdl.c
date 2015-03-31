@@ -14,7 +14,7 @@ layer_t *icon;
 void setup() {
   scene = layer_new();
   layer_init_size(scene, 640, 480);
-  layer_fill(scene, 0x00FFFFFF);
+  layer_fill(scene, 0xFFFFFFFF);
 
   frame = bitmap_new("res/frame.png");
   icon  = bitmap_new("res/icon.png");

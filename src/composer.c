@@ -45,13 +45,13 @@ bool compose(layer_t *l) {
     n = l->children.count;
     if(n) {
       // Have children - compose them
-      l->composite = rgba_alloc(composite_w, composite_h, NULL);
+      l->composite = rgba_new(composite_w, composite_h, NULL);
       // Render our local bitmap first
-      if(l->bitmap.data) rgba_draw(l->composite.data, composite_w, l->bitmap.data, 0, 0, l->bitmap.w, l->bitmap.h, l->bitmap.w);
+      if(l->bitmap.data) rgba_alpha_low(l->composite.data, l->composite.s, l->bitmap.data, l->bitmap.s, l->bitmap.w, l->bitmap.h);
       children = (layer_t**)l->children.data;
       while(n--) {
         child = *children++;
-        rgba_draw(l->composite.data, composite_w, child->composite.data, child->x, child->y, child->composite.w, child->composite.h, child->composite.w);
+        rgba_alpha_low(&l->composite.data[child->y * l->composite.s + child->x], l->composite.s, child->composite.data, child->composite.s, child->composite.w, child->composite.h);
         child++;
       }
     } else {
