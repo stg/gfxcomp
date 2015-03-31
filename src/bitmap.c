@@ -32,7 +32,7 @@ static void render(layer_t *l) {
   uint32_t *dst = l->bitmap.data;
   
   // Stretch at midpoint
-  // TODO: Not very effecient and should support scaling down by one pixel
+  // TODO: Not very efficient and should support scaling down by one pixel
   unsigned n;
   rgba_copy(dst, dst_w, src, 0, 0, src_w >> 1, src_h, src_w);
   for(n = 0; n <= dst_w - src_w; n++)
