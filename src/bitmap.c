@@ -11,12 +11,11 @@ static void render(layer_t *l) {
   bitmap_t *b = (bitmap_t*)l;
   
   // Back up the original if not already done
-  if(!b->original) {
-    b->original = l->bitmap;
-    b->original_w = l->bitmap_w;
-    b->original_h = l->bitmap_h;
-    l->bitmap = NULL;
-  }
+  if(b->original == l->bitmap) l->bitmap = NULL;
+
+  // Sanity: size check
+  if(b->requested_w < b->original_w) b->requested_w = b->original_w;
+  if(b->requested_h < b->original_h) b->requested_h = b->original_h;
 
   // Easy access
   uint32_t src_w = b->original_w;
@@ -35,14 +34,16 @@ static void render(layer_t *l) {
   uint32_t *dst = l->bitmap;
   
   // Stretch at midpoint
+  // TODO: Not very effecient and should support scaling down by one pixel
   unsigned n;
   rgba_copy(dst, dst_w, src, 0, 0, src_w >> 1, src_h, src_w);
   for(n = 0; n <= dst_w - src_w; n++)
     rgba_copy(dst, dst_w, src + (src_w >> 1), (src_w >> 1) + n, 0, 1, src_h, src_w);
   rgba_copy(dst, dst_w, src + ((src_w >> 1) + 1), dst_w - (src_w >> 1), 0, src_w >> 1, src_h, src_w);
   rgba_copy(dst, dst_w, dst + dst_w * (src_h >> 1), 0, dst_h - (src_h >> 1), dst_w, src_h >> 1, dst_w);
-  for(n = 1; n <= dst_h - src_h; n++)
+  for(n = 1; n <= dst_h - src_h; n++) {
     rgba_copy(dst, dst_w, dst + dst_w * ((src_h >> 1)), 0, (src_h >> 1) + n, dst_w, 1, src_w);
+  }
 }
 
 void bitmap_init(layer_t *l, const char *filename) {
@@ -58,9 +59,9 @@ void bitmap_init(layer_t *l, const char *filename) {
       if(upng_get_format(upng) == UPNG_RGBA8) {
         printf("[upng] loaded %ux%u ok\n", upng_get_width(upng), upng_get_height(upng));
         // Convert to RGBA
-        l->bitmap_w = upng_get_width(upng);
-        l->bitmap_h = upng_get_height(upng);
-        l->bitmap = rgba_from_buffer(upng_get_buffer(upng), l->bitmap_w, l->bitmap_h);
+        l->bitmap_w = b->original_w = upng_get_width(upng);
+        l->bitmap_h = b->original_h = upng_get_height(upng);
+        l->bitmap = b->original = rgba_from_buffer(upng_get_buffer(upng), l->bitmap_w, l->bitmap_h);
       } else {
         printf("[upng] format error (%i)\n", upng_get_format(upng));
       }

@@ -8,14 +8,10 @@ typedef struct __attribute__ ((__packed__)) {
   uint8_t r, g, b, a;
 } rgba_t;
 
-// 0xAABBGGRR AA=0xFF=OPAQUE, 0x00=TRANSPARENT
-
-
 // Single pixel RGBA overlay core operation
-// Note: not mathematically accurate
+// TODO: not mathematically accurate nor very effecient
 static inline void rgba_pixel(rgba_t *dptr, rgba_t *sptr) {
   dptr->a = 255 - ((uint8_t)((((uint16_t)(255 - dptr->a)) * ((uint16_t)(255 - sptr->a))) >> 8));
-  
   dptr->r = (((uint16_t)sptr->r * (uint16_t)sptr->a) + ((uint16_t)dptr->r * (uint16_t)(255 - sptr->a))) >> 8;
   dptr->g = (((uint16_t)sptr->g * (uint16_t)sptr->a) + ((uint16_t)dptr->g * (uint16_t)(255 - sptr->a))) >> 8;
   dptr->b = (((uint16_t)sptr->b * (uint16_t)sptr->a) + ((uint16_t)dptr->b * (uint16_t)(255 - sptr->a))) >> 8;
@@ -61,8 +57,6 @@ void rgba_copy(void *dst, uint32_t dst_stride, void *src, uint32_t x, uint32_t y
   }
 }
 
-
-
 // Allocate RGBA surface
 void *rgba_alloc(uint32_t w, uint32_t h) {
   void *rgba = malloc(w * h * 4);
@@ -73,11 +67,7 @@ void *rgba_alloc(uint32_t w, uint32_t h) {
 // Allocate RGBA surface
 void *rgba_from_buffer(const void *buf, uint32_t w, uint32_t h) {
   void *rgba = malloc(w * h * 4);
-  uint32_t *dptr = rgba, *sptr = (uint32_t*)buf;
-  unsigned n;
-  for(n = 0; n < w * h; n++) {
-    *dptr++ = *sptr++;
-  }
+  memcpy(rgba, buf, w * h* 4);
   return rgba;
 }
 

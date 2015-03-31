@@ -17,10 +17,10 @@ void setup() {
   layer_fill(scene, 0x00FFFFFF);
 
   frame = bitmap_new("res/frame.png");
-  icon = bitmap_new("res/icon.png");
-  
-  bitmap_resize(icon, 64, 64);
-  
+  icon  = bitmap_new("res/icon.png");
+
+  bitmap_resize(icon, 64, 48);
+
   add_child(scene, frame);
   add_child(frame, icon);
   layer_move(frame, 0, 16, true);
