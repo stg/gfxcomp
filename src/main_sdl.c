@@ -35,7 +35,7 @@ bool loop() {
   Sleep(10);
   compose(scene);
 
-  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(scene->composite, scene->composite_w, scene->composite_h, 32, scene->composite_w * 4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(scene->composite.data, scene->composite.w, scene->composite.h, 32, scene->composite.w * 4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   if(SDL_MUSTLOCK(screen)) if(SDL_LockSurface(screen) < 0) exit(1);
   SDL_FillRect(screen, NULL, 0xFFFFFF00);
   SDL_BlitSurface(surface, NULL, screen, NULL);
@@ -48,7 +48,10 @@ bool loop() {
       case SDL_KEYDOWN:
         switch(e.key.keysym.sym) {
           case SDLK_ESCAPE: return false;
+          default: break;
         }
+        break;
+      default:
         break;
     }
   }
@@ -58,7 +61,7 @@ bool loop() {
 
 int main(int argc, char** argv) {
   if(SDL_Init(SDL_INIT_VIDEO) < 0) return 1;
-  if(screen = SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE)) {
+  if(!!(screen = SDL_SetVideoMode(640, 480, 32, SDL_SWSURFACE))) {
     setup();
     while(loop());
   }

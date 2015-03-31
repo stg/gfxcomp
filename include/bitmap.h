@@ -4,12 +4,10 @@
 #include "layer.h"
 
 struct bitmap_t {
-  layer_t layer;
-  void *original;
-  uint32_t original_w;
-  uint32_t original_h;
-  uint32_t requested_w;
-  uint32_t requested_h;
+  layer_t  super;
+  rgba_t   original;
+  uint32_t render_w;
+  uint32_t render_h;
 };
 
 typedef struct bitmap_t bitmap_t;

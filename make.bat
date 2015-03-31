@@ -1,1 +1,2 @@
-gcc -g src/*.c -Iinclude -lSDL -obin/a
+cls
+gcc -g src/*.c -Wall -Werror -Wfatal-errors -Iinclude -lSDL -obin/a
