@@ -9,7 +9,7 @@
 
 static void render(layer_t *l) {
   bitmap_t *b = (bitmap_t*)l;
-  
+
   // Back up the original if not already done
   if(b->original.data == l->bitmap.data) l->bitmap.data = NULL;
 
@@ -30,7 +30,7 @@ static void render(layer_t *l) {
   uint32_t dst_s = l->bitmap.s;
   pixel_t *src = b->original.data;
   pixel_t *dst = l->bitmap.data;
-  
+
   // Stretch at midpoint
   // TODO: Not very efficient and should support scaling DOWN by one pixel to remove the midpoints
   unsigned n;
@@ -46,41 +46,22 @@ static void render(layer_t *l) {
 static void bitmap_free(layer_t *l) {
   bitmap_t *b = (bitmap_t*)l;
   if(b->original.data == l->bitmap.data) l->bitmap.data = NULL;
-  rgba_free(&b->original);
 }
 
-void bitmap_init(layer_t *l, const char *filename) {
+void bitmap_init(layer_t *l, rgba_t rgba) {
   bitmap_t *b = (bitmap_t*)l;
   layer_init(l);
   memset(((char*)b) + sizeof(layer_t), 0, sizeof(bitmap_t) - sizeof(layer_t));
   l->free = bitmap_free;
-  // Read file
-  upng_t* upng = upng_new_from_file(filename);
-  if(upng_get_error(upng) == UPNG_EOK) {
-    // Decode
-    upng_decode(upng);
-    if(upng_get_error(upng) == UPNG_EOK) {
-      if(upng_get_format(upng) == UPNG_RGBA8) {
-        printf("[upng] loaded %ux%u ok\n", upng_get_width(upng), upng_get_height(upng));
-        // Convert to RGBA
-        l->bitmap = b->original = rgba_new(upng_get_width(upng), upng_get_height(upng), upng_get_buffer(upng));
-      } else {
-        printf("[upng] format error (%i)\n", upng_get_format(upng));
-      }
-    } else {
-      printf("[upng] decode failed (%i)\n", upng_get_error(upng));
-    }
-    upng_free(upng);
-  } else {
-    printf("[upng] load failed (%i)\n", upng_get_error(upng));
-  }
+  l->bitmap = b->original = rgba;
+  l->w = rgba.w; l->h = rgba.h; // Report size
   l->need_compose = true;
   l->render = render;
 }
 
-layer_t *bitmap_new(const char *filename) {
+layer_t *bitmap_new(rgba_t rgba) {
   bitmap_t *b = malloc(sizeof(bitmap_t));
-  bitmap_init((layer_t*)b, filename);
+  bitmap_init((layer_t*)b, rgba);
   return (layer_t*)b;
 }
 
@@ -89,4 +70,5 @@ void bitmap_resize(layer_t *l, uint32_t w, uint32_t h) {
   b->render_w = w;
   b->render_h = h;
   l->need_render |= w != l->bitmap.w || h != l->bitmap.h;
+  l->w = w; l->h = h; // Report size
 }

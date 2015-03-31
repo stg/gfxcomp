@@ -12,8 +12,8 @@ struct bitmap_t {
 
 typedef struct bitmap_t bitmap_t;
 
-layer_t* bitmap_new(const char *filename);
-void bitmap_init(layer_t *l, const char *filename);
+layer_t* bitmap_new(rgba_t rgba);
+void bitmap_init(layer_t *l, rgba_t rgba);
 void bitmap_resize(layer_t *l, uint32_t w, uint32_t h);
 
 #endif//_BITMAP_H_

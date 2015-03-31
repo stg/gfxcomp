@@ -5,27 +5,23 @@
 #include "rgba.h"
 #include "list.h"
 
+layer_t *layer_new() {
+  layer_t *l = malloc(sizeof(layer_t));
+  layer_init(l);
+  return l;
+}
+
 void layer_init(layer_t *l) {
   memset(l, 0, sizeof(layer_t));
   l->need_compose = true;
   l->children = list_new(sizeof(layer_t*));
 }
 
-layer_t *layer_new() {
-  layer_t *l = malloc(sizeof(layer_t));
-  layer_init(l);
-  return l;  
-}
-
 void layer_resize(layer_t *l, uint32_t w, uint32_t h) {
   if(l->bitmap.data) rgba_free(&l->bitmap);
   l->bitmap = rgba_new(w, h, NULL);
+  l->w = w; l->h = h; // Report size
   l->need_compose = true;
-}
-
-void layer_init_size(layer_t *l, uint32_t w, uint32_t h) {
-  memset(l, 0, sizeof(layer_t));
-  layer_resize(l, w, h);
 }
 
 void layer_fill(layer_t *l, uint32_t color) {
@@ -51,21 +47,6 @@ layer_t* remove_child_at(layer_t* parent, uint32_t z_index) {
     parent->need_compose = true;
   }
   return l;
-
-/*  
-  // Sanity: z_index in range?
-  if(z_index >= parent->children_count) return NULL;
-  // Set child to orphan
-  layer_t* l = parent->children[z_index];
-  l->parent = NULL;
-  // Collapse at z_index
-  memmove(parent->children + z_index, parent->children + z_index + 1, (parent->children_count - z_index) * sizeof(layer_t*));
-  parent->children_count--;
-  // Signal composition required
-  parent->need_compose = true;
-  // Return removed child
-  return l;
-*/
 }
 
 // Removes the specified child from its associated parent

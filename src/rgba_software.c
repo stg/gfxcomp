@@ -5,6 +5,7 @@
 #include "rgba.h"
 #include "rect.h"
 #include "utils.h"
+#include "upng.h"
 
 // Single pixel RGBA overlay core operation
 // TODO: not mathematically accurate nor very efficient
@@ -78,6 +79,30 @@ rgba_t rgba_new(uint32_t w, uint32_t h, const void *data) {
   rgba.h = h;
   if(data) memcpy(rgba.data, data, w * h * 4);
   else     memset(rgba.data, 0,    w * h * 4);
+  return rgba;
+}
+
+rgba_t rgba_from_file(const char *filename) {
+  rgba_t rgba;
+  upng_t* upng = upng_new_from_file(filename);
+  if(upng_get_error(upng) == UPNG_EOK) {
+    // Decode
+    upng_decode(upng);
+    if(upng_get_error(upng) == UPNG_EOK) {
+      if(upng_get_format(upng) == UPNG_RGBA8) {
+        printf("[upng] loaded %ux%u ok\n", upng_get_width(upng), upng_get_height(upng));
+        // Convert to RGBA
+        rgba = rgba_new(upng_get_width(upng), upng_get_height(upng), upng_get_buffer(upng));
+      } else {
+        printf("[upng] format error (%i)\n", upng_get_format(upng));
+      }
+    } else {
+      printf("[upng] decode failed (%i)\n", upng_get_error(upng));
+    }
+    upng_free(upng);
+  } else {
+    printf("[upng] load failed (%i)\n", upng_get_error(upng));
+  }
   return rgba;
 }
 

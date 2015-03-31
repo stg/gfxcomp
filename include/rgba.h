@@ -25,7 +25,16 @@ struct rgba_t {
 
 typedef struct rgba_t rgba_t;
 
+// Create new rgba instance of specified size
+// Contents are filled with data of form stride=w*4, format=RGBA8, order=top->bottom/left->right
+// If data is NULL, contents will be initialized to zero (transparent black)
 rgba_t rgba_new(uint32_t w, uint32_t h, const void* data);
+
+// Create new rgba instance from a PNG file
+rgba_t rgba_from_file(const char *filename);
+
+// Free associated memory
+// Can't be used afer this
 void   rgba_free(rgba_t *rgba);
 
 // Low level pixel alpha-blending
