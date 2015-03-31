@@ -7,36 +7,39 @@
 #include "bitmap.h"
 
 SDL_Surface *screen;
-layer_t scene;
-bitmap_t frame;
-bitmap_t icon;
+layer_t *scene;
+layer_t *frame;
+layer_t *icon;
 
 void setup() {
-  bitmap_init(&frame, "res/frame.png");
-  bitmap_init(&icon, "res/icon.png");
+  scene = layer_new();
+  layer_init_size(scene, 640, 480);
+  layer_fill(scene, 0x00FFFFFF);
 
-  layer_init_size(&scene, 640, 480);
-  layer_fill(&scene, 0x00FFFFFF);
-
-  add_child(&scene, &frame.layer);
-  add_child(&frame.layer, &icon.layer);
-  layer_move(&frame.layer, 0, 16, true);
+  frame = bitmap_new("res/frame.png");
+  icon = bitmap_new("res/icon.png");
+  
+  bitmap_resize(icon, 64, 64);
+  
+  add_child(scene, frame);
+  add_child(frame, icon);
+  layer_move(frame, 0, 16, true);
 }
 
 bool loop() {
   SDL_Event e;
 
-  layer_move(&icon.layer, 1, 0, true);
-  layer_move(&frame.layer, 1, 0, true);
-  Sleep(10);
-  printf("compose begin\n");
-  compose(&scene);
-  printf("compose end\n");
+  layer_move(icon, 1, 0, true);
+  layer_move(frame, 1, 0, true);
 
-  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(scene.composite, scene.composite_w, scene.composite_h, 32, scene.composite_w * 4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+  Sleep(10);
+  compose(scene);
+
+  SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(scene->composite, scene->composite_w, scene->composite_h, 32, scene->composite_w * 4, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
   if(SDL_MUSTLOCK(screen)) if(SDL_LockSurface(screen) < 0) exit(1);
   SDL_FillRect(screen, NULL, 0xFFFFFF00);
   SDL_BlitSurface(surface, NULL, screen, NULL);
+  SDL_FreeSurface(surface);
   if(SDL_MUSTLOCK(screen)) SDL_UnlockSurface(screen);
   SDL_Flip(screen); 
   

@@ -24,9 +24,10 @@ struct layer_t {
 
 typedef struct layer_t layer_t;
 
-void layer_init(layer_t *g);
-void layer_init_size(layer_t *g, uint32_t w, uint32_t h);
-void layer_move(layer_t* g, int32_t x, int32_t y, bool relative);
-void layer_fill(layer_t *g, uint32_t color);
+layer_t *layer_new();
+void layer_init(layer_t *l);
+void layer_init_size(layer_t *l, uint32_t w, uint32_t h);
+void layer_move(layer_t* l, int32_t x, int32_t y, bool relative);
+void layer_fill(layer_t *l, uint32_t color);
 
 #endif//_LAYER_H_

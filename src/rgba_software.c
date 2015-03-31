@@ -22,11 +22,11 @@ static inline void rgba_pixel(rgba_t *dptr, rgba_t *sptr) {
 }
 
 // Software fallback RGBA drawing
-void rgba_draw(void *dst, uint32_t dst_w, void *src, uint32_t x, uint32_t y, uint32_t src_w, uint32_t src_h) {
+void rgba_draw(void *dst, uint32_t dst_stride, void *src, uint32_t x, uint32_t y, uint32_t src_w, uint32_t src_h, uint32_t src_stride) {
   // Sanity: nothing to do?
   if(src_w == 0 || src_h == 0) return;
   // Set up source pointer for right=>left, bottom=>up
-  rgba_t  *dptr, *sptr = &((rgba_t*)src)[src_w * src_h], spx, dpx;
+  rgba_t  *dptr, *sptr, spx, dpx;
   //printf("src se is %08X\n", sizeof(((rgba_t*)src)[0]) );
   // Keep a copy of source width
   uint32_t org_w = src_w;
@@ -34,11 +34,34 @@ void rgba_draw(void *dst, uint32_t dst_w, void *src, uint32_t x, uint32_t y, uin
   while(src_h--) {
     // Set up destination pointer for right=>left
     src_w = org_w;
-    dptr = &((rgba_t*)dst)[(y + src_h) * dst_w + (src_w + x)];
+    dptr = &((rgba_t*)dst)[(y + src_h) * dst_stride + (src_w + x)];
+    sptr = &((rgba_t*)src)[src_h * src_stride + src_w];
     // Loop over each line and compose pixels as we go
     while(src_w--) rgba_pixel(--dptr, --sptr);
   }
 }
+
+// Software fallback RGBA drawing
+void rgba_copy(void *dst, uint32_t dst_stride, void *src, uint32_t x, uint32_t y, uint32_t src_w, uint32_t src_h, uint32_t src_stride) {
+  // Sanity: nothing to do?
+  if(src_w == 0 || src_h == 0) return;
+  // Set up source pointer for right=>left, bottom=>up
+  rgba_t  *dptr, *sptr, spx, dpx;
+  //printf("src se is %08X\n", sizeof(((rgba_t*)src)[0]) );
+  // Keep a copy of source width
+  uint32_t org_w = src_w;
+  
+  while(src_h--) {
+    // Set up destination pointer for right=>left
+    src_w = org_w;
+    dptr = &((rgba_t*)dst)[(y + src_h) * dst_stride + x];
+    sptr = &((rgba_t*)src)[src_h * src_stride];
+    // Copy line
+    memcpy(dptr, sptr, src_w * 4);
+  }
+}
+
+
 
 // Allocate RGBA surface
 void *rgba_alloc(uint32_t w, uint32_t h) {
