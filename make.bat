@@ -1,1 +1,1 @@
-gcc -g *.c -lSDL
+gcc -g src/*.c -Iinclude -lSDL -obin/a

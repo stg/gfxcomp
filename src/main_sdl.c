@@ -12,8 +12,8 @@ bitmap_t frame;
 bitmap_t icon;
 
 void setup() {
-  bitmap_init(&frame, "frame.png");
-  bitmap_init(&icon, "icon.png");
+  bitmap_init(&frame, "res/frame.png");
+  bitmap_init(&icon, "res/icon.png");
 
   layer_init_size(&scene, 640, 480);
   layer_fill(&scene, 0x00FFFFFF);
